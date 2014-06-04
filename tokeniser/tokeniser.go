@@ -5,9 +5,24 @@ import (
 	"io"
 	"unicode"
 	"unicode/utf8"
+	"strings"
 )
 
+// A tokeniser is a function takes an incoming set of bytes, and produces a set of string tokens on a passed in channel
 type Tokeniser func(r io.Reader, ch chan string)
+
+func (t1 Tokeniser) Compose(t2 Tokeniser) Tokeniser {
+	return func(r io.Reader, chOut chan string) {
+		chMid := make(chan string) 
+		go func(){
+			t1(r, chMid)
+			close(chMid)
+		}()
+		for str:= range chMid {
+			t2(strings.NewReader(str), chOut)
+		}
+	}
+}
 
 //Simple factory function that produces a tokeniser given a splitting function
 func TokenFactory(sf bufio.SplitFunc) Tokeniser {
@@ -19,6 +34,7 @@ func TokenFactory(sf bufio.SplitFunc) Tokeniser {
 		}
 	}
 }
+
 
 //Splitting function that breaks a paragraph in to a set of sentences. Will generally split on full stops or exclamation
 //marks, however it is aware of opening and closing brackets, quotes, etc.
