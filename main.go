@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"strconv"
+	"sort"
 	"github.com/SillyMoo/concordance-go/tokeniser"
 )
 
@@ -65,12 +66,18 @@ func main(){
 	go generateWordPositions(ch1, ch2)
 
 	var res = generateConcordance(ch2)
-
-	for k,v := range res {
+	var keys = make([]string, len(res))
+	i:=0
+	for k,_ := range res {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+	for _,k := range keys {
 		var strArr []string
-		for _, pos := range v {
+		for _, pos := range res[k] {
 			strArr = append(strArr, strconv.Itoa(pos.sentenceIdx))
 		}
-		fmt.Printf("%s {%d:%v}\n", k, len(v), strings.Join(strArr, ","))
+		fmt.Printf("%s {%d:%v}\n", k, len(res[k]), strings.Join(strArr, ","))
 	}
 }
