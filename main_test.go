@@ -29,7 +29,7 @@ func TestGenerateWordPositions(t *testing.T) {
 			if pos.wordIdx != 0 {
 				t.Error("Wrong word position for He's")
 			}
-			numOfHes = numOfHes + 1
+			numOfHes++
 		case "be":
 			if pos.sentenceIdx != 2 {
 				t.Error("Wrong sentence position for be")
@@ -99,7 +99,6 @@ func TestGenerateConcordance(t *testing.T) {
 			t.Error("Expected panther wordIdx to be 2")
 		}
 	}
-
 }
 
 func TestOutputConcordance(t *testing.T) {
@@ -141,5 +140,4 @@ func TestOutputConcordance(t *testing.T) {
 			}
 		}
 	}
-
 }

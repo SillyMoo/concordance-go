@@ -26,7 +26,7 @@ type wordPosition struct {
 func generateWordPositions(chIn chan string, chOut chan wordPosition) {
 	sentenceIdx := 0
 	for str := range chIn {
-		var wordChan = make(chan string)
+		wordChan := make(chan string)
 		go func() {
 			tokeniser.TokenFactory(tokeniser.ScanWords)(strings.NewReader(str), wordChan)
 			close(wordChan)
