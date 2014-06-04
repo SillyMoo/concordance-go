@@ -8,6 +8,11 @@ import (
 	"testing"
 )
 
+//Integration test that run test.text through the concur producer, and compares the results with
+//test.expect. The file test.expect contains a reformated version of the example results from the assignment
+//description, but with two small changes. Firstly 'e.g.' has been replaced with 'e.g.', I decided to not add a special
+//case just for this. Secondly the frequency for 'concordance', was bumped up to 3, it is 2 in the sample result, but
+//this seems to be an issue with the document.
 func TestTheLot(t *testing.T) {
 	fTestText, err := os.Open("./testResources/test.text")
 	if err != nil {
