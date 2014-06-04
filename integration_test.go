@@ -3,20 +3,19 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"testing"
 )
 
 func TestTheLot(t *testing.T) {
-	fTestText, err := os.Open("./test.text")
+	fTestText, err := os.Open("./testResources/test.text")
 	if err != nil {
 		t.Errorf("Could not open test text file, %v", err)
 	}
 
 	var fTestExpect *os.File
-	fTestExpect, err = os.Open("./test.expect")
+	fTestExpect, err = os.Open("./testResources/test.expect")
 	rTestExpect := bufio.NewReader(fTestExpect)
 
 	var out = new(bytes.Buffer)
@@ -27,7 +26,6 @@ func TestTheLot(t *testing.T) {
 
 	for str, err = out.ReadString('\n'); err == nil; str, err = out.ReadString('\n') {
 		str2, err2 = rTestExpect.ReadString('\n')
-		fmt.Printf("%s %s\n", str, str2)
 		if err2 == io.EOF {
 			t.Errorf("Too many lines returned")
 			return
