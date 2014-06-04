@@ -6,7 +6,10 @@ Implementation of concordance task for DataSift, implemented in go.
 
 The design is based around tokenisers, which take a reader (incoming set of bytes) and a channel of strings. The incoming bytes are parsed (as unicode), tokenised, and the tokens are passed out though the channel. Tokenisers are composable through a Compose method.
 
-By using channels we also allow ourselves to parallelise the algorithm (although currently it is essentially sequential). 
+####Performance considerations
+It's worth noting that currently the algorithm works sequentially through the input, however it would be possible to make it run in parallel (one of the advantages of using the channel approach).
+
+There is no real effort to limit the amount of strings or byte arrays created, this could be an issue if procesing very large files (causing GC pauses), but that does not seem to be the intent of the assignment so I left it as is for now. Also to order the results a slice containing all tokens is created, again for a very large input this could be problematic.
 
 ###Building
 
