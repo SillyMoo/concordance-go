@@ -60,16 +60,16 @@ func TestTokenFactory(t *testing.T) {
 	go func() {
 		TokenFactory(bufio.ScanRunes)(strings.NewReader("abcd"), ch)
 		close(ch)
-		}()
+	}()
 	var expect = []string{"a", "b", "c", "d"}
-	i:=0
+	i := 0
 	for str := range ch {
 		if str != expect[i] {
 			t.Errorf("%s!=%s in %s", str, expect[i], "abcd")
 		}
 		i++
 	}
-	if i!=len(expect) {
+	if i != len(expect) {
 		t.Error("not enough tokens recieved from token factor")
 	}
 }
@@ -79,16 +79,16 @@ func TestTokeniserComposition(t *testing.T) {
 	go func() {
 		TokenFactory(ScanWords).Compose(TokenFactory(bufio.ScanRunes))(strings.NewReader("ab cd"), ch)
 		close(ch)
-		}()
+	}()
 	var expect = []string{"a", "b", "c", "d"}
-	i:=0
+	i := 0
 	for str := range ch {
 		if str != expect[i] {
 			t.Errorf("%s!=%s in %s", str, expect[i], "ab cd")
 		}
 		i++
 	}
-	if i!=len(expect) {
+	if i != len(expect) {
 		t.Error("not enough tokens recieved from token factory")
 	}
 }

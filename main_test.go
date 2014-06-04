@@ -1,43 +1,46 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"io"
 	"testing"
 )
 
 func TestGenerateWordPositions(t *testing.T) {
 	in := []string{"He's the greatest.", " He's fantastic.", " Wherever there's danger he'll be there"}
 	chIn, chOut := make(chan string), make(chan wordPosition)
-	go func(){
+	go func() {
 		for _, str := range in {
-			chIn<-str
+			chIn <- str
 		}
 		close(chIn)
 	}()
-	go func(){
+	go func() {
 		generateWordPositions(chIn, chOut)
 	}()
 	numOfHes, foundBe := 0, false
-	for pos:= range chOut {
+	for pos := range chOut {
 		switch pos.word {
-			case "he's":
-				if !(pos.sentenceIdx==0 || pos.sentenceIdx==1) {
-					t.Error("Wrong sentence position for He's")
-				}
-				if pos.wordIdx!=0 {
-					t.Error("Wrong word position for He's")
-				}
-				numOfHes=numOfHes+1
-			case "be":
-				if pos.sentenceIdx!=2 {
-					t.Error("Wrong sentence position for be")
-				}
-				if pos.wordIdx!=4 {
-					t.Error("Wrong word position for be")
-				}
-				foundBe = true
+		case "he's":
+			if !(pos.sentenceIdx == 0 || pos.sentenceIdx == 1) {
+				t.Error("Wrong sentence position for He's")
+			}
+			if pos.wordIdx != 0 {
+				t.Error("Wrong word position for He's")
+			}
+			numOfHes = numOfHes + 1
+		case "be":
+			if pos.sentenceIdx != 2 {
+				t.Error("Wrong sentence position for be")
+			}
+			if pos.wordIdx != 4 {
+				t.Error("Wrong word position for be")
+			}
+			foundBe = true
 		}
 	}
-	if numOfHes!=2 {
+	if numOfHes != 2 {
 		t.Errorf("He's not found enough")
 	}
 	if !foundBe {
@@ -47,21 +50,21 @@ func TestGenerateWordPositions(t *testing.T) {
 
 func TestGenerateConcordance(t *testing.T) {
 	in := []wordPosition{
-		wordPosition{position{0,0}, "the"},
-		wordPosition{position{1,0}, "the"},
-		wordPosition{position{2,0}, "the"},
-		wordPosition{position{0,1}, "pink"},
-		wordPosition{position{0,2}, "panther"}}
+		wordPosition{position{0, 0}, "the"},
+		wordPosition{position{1, 0}, "the"},
+		wordPosition{position{2, 0}, "the"},
+		wordPosition{position{0, 1}, "pink"},
+		wordPosition{position{0, 2}, "panther"}}
 
 	ch := make(chan wordPosition)
-	go func(){
+	go func() {
 		for _, wp := range in {
-			ch<-wp
+			ch <- wp
 		}
 		close(ch)
 	}()
 	res := generateConcordance(ch)
-	if positions, ok :=res["the"]; !ok {
+	if positions, ok := res["the"]; !ok {
 		t.Error("'the' not found")
 	} else {
 		if len(positions) != 3 {
@@ -69,7 +72,7 @@ func TestGenerateConcordance(t *testing.T) {
 		}
 	}
 
-	if positions, ok :=res["pink"]; !ok {
+	if positions, ok := res["pink"]; !ok {
 		t.Error("'pink' not found")
 	} else {
 		if len(positions) != 1 {
@@ -83,7 +86,7 @@ func TestGenerateConcordance(t *testing.T) {
 		}
 	}
 
-	if positions, ok :=res["panther"]; !ok {
+	if positions, ok := res["panther"]; !ok {
 		t.Error("'panther' not found")
 	} else {
 		if len(positions) != 1 {
@@ -94,6 +97,48 @@ func TestGenerateConcordance(t *testing.T) {
 		}
 		if positions[0].wordIdx != 2 {
 			t.Error("Expected panther wordIdx to be 2")
+		}
+	}
+
+}
+
+func TestOutputConcordance(t *testing.T) {
+	in := []wordPosition{
+		wordPosition{position{0, 0}, "the"},
+		wordPosition{position{1, 0}, "the"},
+		wordPosition{position{2, 0}, "the"},
+		wordPosition{position{0, 1}, "pink"},
+		wordPosition{position{0, 2}, "panther"}}
+
+	expect := []string{
+		"panther {1:0}",
+		"pink {1:0}",
+		"the {3:0,1,2}"}
+
+	ch := make(chan wordPosition)
+	go func() {
+		for _, wp := range in {
+			ch <- wp
+		}
+		close(ch)
+	}()
+	res := generateConcordance(ch)
+	buffer := new(bytes.Buffer)
+	inCh := bufio.NewWriter(buffer)
+	outputConcordance(inCh, res, standardConcordanceLineOutput)
+
+	for _, expected := range expect {
+		line, err := buffer.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				return
+			} else {
+				t.Error(err)
+			}
+		} else {
+			if line != expected {
+				t.Errorf("Expected: %s, got: %s", expected, line)
+			}
 		}
 	}
 
