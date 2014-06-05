@@ -6,14 +6,14 @@ Implementation of concordance task for DataSift, implemented in go.
 
 The design is based around tokenisers, which take a reader (incoming set of bytes) and a channel of strings. The incoming bytes are parsed (as unicode), tokenised, and the tokens are passed out though the channel. Tokenisers are composable through a Compose method.
 
-The use of channels is not strictly neccessary, but does afford easy composition. The go routine and channel composition makes producer/consumer type abstractions very simple, and a chain of tokenisers fits this pattern perfectly.
+The use of channels is not strictly necessary, but does afford easy composition. The go routine and channel composition makes producer/consumer type abstractions very simple, and a chain of tokenisers fits this pattern perfectly.
 
 ####Performance considerations
 Channels do add a performance overhead, if performance was a primary consideration you could move to using the bufio scanner and splitfunc (as used inside the tokenisers) directly. You could also avoid using a change of tokenisers and do splitting lines and tokens in a single function (which would reduce the GC impact described below).
 
 Note that since we are only dependent upon a single input and output resource (standard input and standard output) the design is not concurrent (i.e thread blocking due to resource contention is not an issue). A concurrent approach would be possible as the tokeniser is based around the channel abstraction, but the additional complexity was not justified by the current requirements.
 
-There is no real effort to limit the amount of strings or byte arrays created, this could be an issue if procesing very large files (causing GC pauses), but that does not seem to be the intent of the assignment so I left it as is for now. Also to order the results a slice containing all tokens is created, again for a very large input this could be problematic.
+There is no real effort to limit the amount of strings or byte arrays created, this could be an issue if processing very large files (causing GC pauses), but that does not seem to be the intent of the assignment so I left it as is for now. Also to order the results a slice containing all tokens is created, again for a very large input this could be problematic.
 
 ###Building
 First if you have not already done so install [go](http://golang.org/doc/install). You will need to set an environmental variable called GOPATH after installing go, this a path to the 'workspace' in which go code is developed and installed, see [here](http://golang.org/doc/code.html#GOPATH) for more details
