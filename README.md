@@ -30,9 +30,9 @@ Options:
 ###Addtional performance notes
 As a quick check to confirm that the additional concurrency would not improve performance I created a concordance from the complete works of [shakespear](http://www.gutenberg.org/ebooks/100.txt.utf-8), piping the output to /dev/null. The output from 'time' is shown below:
 
-real    0m1.953s                                                                                                       │
-user    0m1.902s                                                                                                       │
-sys     0m0.086s
+real    0m1.953s  
+user    0m1.902s  
+sys     0m0.086s  
 
 We can see that real closely matches user (~2.6% delta), showing that we are quite effectively using the single thread without too much blocking (some blocking is inevitable, we are reading off disk after all). With some code changes and raising GOMAXPROCS we could make a parallel implementation. But it is probably better to split the file up in a separate process, and then stand up multiple instances of concordance-go to process the file parts, finally merging the multiple concordances in a final step (thus we could, using this mechanism, scale over multiple VMs/servers).
 
@@ -40,7 +40,8 @@ Update:
 Added a small buffer to all channels, as this showed a small performance improvement. Previously all channels were unbuffered which meant we could always process a word whilst waiting for a word to be pulled of the standard input (i.e if the go routines had finished processing all previously retrieved bytes).
 
 This lead to a small but consistent performance improvement:
-real    0m1.888s                                                                                                       │
-user    0m1.841s                                                                                                       │
-sys     0m0.090s
+
+real    0m1.888s  
+user    0m1.841s  
+sys     0m0.090s  
 
