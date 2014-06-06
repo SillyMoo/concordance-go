@@ -25,3 +25,13 @@ Once go is setup you can get the code by type ```go get github.com/SillyMoo/conc
 
 Options:  
 - --outputFormat=[standard|wordIdx] - defines the output format, standard (the default) will output in the standard format as per the assignment pdf. wordIdx will output in the format ```token {frequency:sp1.wp1,sp2.wp2,...}``` where sp is the index of the sentence in which the word occurs, and wp is the index of the word within sentence.  
+
+
+###Addtional performance notes
+As a quick check to confirm that the additional concurrency would not improve performance I created a concordance from the complete works of [shakespear](http://www.gutenberg.org/ebooks/100.txt.utf-8), piping the output to /dev/null. The output from 'time' is shown below:
+
+real    0m1.953s                                                                                                       │
+user    0m1.902s                                                                                                       │
+sys     0m0.086s
+
+We can see that real closely matches user (~2.6% delta), showing that we are quite effectively using the single thread without too much blocking (some blocking is inevitable, we are reading off disk after all). With some code changes and raising GOMAXPROCS we could make a parallel implementation. But it is probably better to split the file up in a separate process, and then stand up multiple instances of concordance-go to process the file parts, finally merging the multiple concordances in a final step (thus we could, using this mechanism, scale over multiple VMs/servers).
