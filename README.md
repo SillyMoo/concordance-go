@@ -11,7 +11,7 @@ The use of channels is not strictly necessary, but does afford easy composition.
 ####Performance considerations
 Channels do add a performance overhead, if performance was a primary consideration you could move to using the bufio scanner and splitfunc (as used inside the tokenisers) directly. You could also avoid using a change of tokenisers and do splitting lines and tokens in a single function (which would reduce the GC impact described below).
 
-Note that since we are only dependent upon a single input and output resource (standard input and standard output) the design is not concurrent (i.e thread blocking due to resource contention is not an issue). A concurrent approach would be possible as the tokeniser is based around the channel abstraction, but the additional complexity was not justified by the current requirements.
+Note that since we are only dependent upon a single input and output resource (standard input and standard output) the design has limited concurrency (i.e thread blocking due to resource contention is not an issue). A more concurrent approach would be possible as the tokeniser is based around the channel abstraction, but the additional complexity was not justified by the current requirements.
 
 There is no real effort to limit the amount of strings or byte arrays created, this could be an issue if processing very large files (causing GC pauses), but that does not seem to be the intent of the assignment so I left it as is for now. Also to order the results a slice containing all tokens is created, again for a very large input this could be problematic.
 
@@ -35,3 +35,12 @@ user    0m1.902s                                                                
 sys     0m0.086s
 
 We can see that real closely matches user (~2.6% delta), showing that we are quite effectively using the single thread without too much blocking (some blocking is inevitable, we are reading off disk after all). With some code changes and raising GOMAXPROCS we could make a parallel implementation. But it is probably better to split the file up in a separate process, and then stand up multiple instances of concordance-go to process the file parts, finally merging the multiple concordances in a final step (thus we could, using this mechanism, scale over multiple VMs/servers).
+
+Update:
+Added a small buffer to all channels, as this showed a small performance improvement. Previously all channels were unbuffered which meant we could always process a word whilst waiting for a word to be pulled of the standard input (i.e if the go routines had finished processing all previously retrieved bytes).
+
+This lead to a small but consistent performance improvement:
+real    0m1.888s                                                                                                       │
+user    0m1.841s                                                                                                       │
+sys     0m0.090s
+

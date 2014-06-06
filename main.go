@@ -11,8 +11,8 @@ import (
 //The main functionality for producing a concordance, pulled out in to a separate function
 //to facilitate an 'integration test'
 func produceConcordance(in io.Reader, out io.Writer, c concordanceLineOutput) {
-	var ch1 = make(chan string)
-	var ch2 = make(chan wordPosition)
+	var ch1 = make(chan string, 5)
+	var ch2 = make(chan wordPosition, 5)
 
 	//Split incoming text in to sentences
 	go func() {

@@ -13,7 +13,7 @@ type Tokeniser func(r io.Reader, ch chan string)
 
 func (t1 Tokeniser) Compose(t2 Tokeniser) Tokeniser {
 	return func(r io.Reader, chOut chan string) {
-		chMid := make(chan string)
+		chMid := make(chan string, 5)
 		go func() {
 			t1(r, chMid)
 			close(chMid)
