@@ -5,19 +5,15 @@ import (
 	"bytes"
 	"io"
 	"testing"
+	"strings"
 )
 
 func TestGenerateWordPositions(t *testing.T) {
-	in := []string{"He's the greatest.", " He's fantastic.", " Wherever there's danger he'll be there"}
-	chIn, chOut := make(chan string), make(chan wordPosition)
+	in := "He's the greatest. He's fantastic. Wherever there's danger he'll be there"
+	chOut := make(chan wordPosition)
+
 	go func() {
-		for _, str := range in {
-			chIn <- str
-		}
-		close(chIn)
-	}()
-	go func() {
-		generateWordPositions(chIn, chOut)
+		generateWordPositions(strings.NewReader(in), chOut)
 	}()
 	numOfHes, foundBe := 0, false
 	for pos := range chOut {

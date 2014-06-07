@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/SillyMoo/concordance-go/tokeniser"
+	"github.com/SillyMoo/concordance-go-fast/tokeniser"
 	"io"
 	"sort"
 	"strconv"
 	"strings"
+	"bufio"
 )
 
 //Defines the position of a word within a document, where sentenceIdx is the index of the sentence in which
@@ -23,20 +24,20 @@ type wordPosition struct {
 }
 
 //Given a channel with incoming sentences, will produce a set of word positions on the out channel
-func generateWordPositions(chIn chan string, chOut chan wordPosition) {
+func generateWordPositions(r io.Reader, chOut chan wordPosition) {
 	sentenceIdx := 0
-	for str := range chIn {
-		wordChan := make(chan string, 5)
-		go func() {
-			tokeniser.TokenFactory(tokeniser.ScanWords)(strings.NewReader(str), wordChan)
-			close(wordChan)
-		}()
-		wordIdx := 0
-		for str := range wordChan {
-			chOut <- wordPosition{position{sentenceIdx, wordIdx}, strings.ToLower(str)}
+	wordIdx := 0
+	var scanner = bufio.NewScanner(r)
+	scanner.Split(tokeniser.ScanSentences)
+	for scanner.Scan() {
+	 	str := scanner.Text()
+		if str == "." {
+			sentenceIdx++
+			wordIdx=0
+		} else {
+			chOut <- wordPosition{position{sentenceIdx, wordIdx}, str}
 			wordIdx++
 		}
-		sentenceIdx++
 	}
 	close(chOut)
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+	//"fmt"
 )
 
 // A tokeniser is a function takes an incoming set of bytes, and produces a set of string tokens on a passed in channel
@@ -13,7 +14,7 @@ type Tokeniser func(r io.Reader, ch chan string)
 
 func (t1 Tokeniser) Compose(t2 Tokeniser) Tokeniser {
 	return func(r io.Reader, chOut chan string) {
-		chMid := make(chan string, 5)
+		chMid := make(chan string)
 		go func() {
 			t1(r, chMid)
 			close(chMid)
@@ -45,15 +46,25 @@ func ScanSentences(data []byte, atEOF bool) (advance int, token []byte, err erro
 	}
 
 	//remove preceeding whitespace
+	enclosed := false
+	lastSentenceEnd := -1
+	foundNonPunctuation := false
+	firstPunct := -1
 	start := 0
 	for width := 0; start < len(data); start += width {
 		var r rune
 		r, width = utf8.DecodeRune(data[start:])
-		if !unicode.IsSpace(r) {
+		if !unicode.IsSpace(r) && (!unicode.IsPunct(r) || r=='.' || r=='!' || r=='\r' || r=='\n') {
+			utf8.EncodeRune(data[start:], unicode.ToLower(r))
 			break
 		}
+		if !enclosed && unicode.In(r, unicode.Ps) {
+			//an open bracket/quote, etc was found. Any punctuation found until the matching close will be ignored.
+			enclosed = true
+		} else if enclosed && unicode.In(r, unicode.Pe) {
+			enclosed = false
+		}
 	}
-	enclosed := false
 
 	//look for a period followed by whitespace
 	for width, i := 0, start; i < len(data); i += width {
@@ -65,66 +76,65 @@ func ScanSentences(data []byte, atEOF bool) (advance int, token []byte, err erro
 		} else if enclosed && unicode.In(r, unicode.Pe) {
 			enclosed = false
 		}
-		if !enclosed && (r == '.' || r == '!') {
-			if i+width < len(data) {
-				r2, width2 := utf8.DecodeRune(data[i+width:])
-				if unicode.IsSpace(r2) {
-					return i + width + width2, data[start:i], nil
+		/*if r=='\r' || r=='\n' {
+		 	if foundNonPunctuation {
+				end := i
+				if lastSentenceEnd < firstPunct && lastSentenceEnd!=-1 {
+				end = lastSentenceEnd
+				} else if firstPunct != -1 {
+				end = firstPunct
 				}
+				return i-1, data[start:end], nil
+			} else {
+				fmt.Println("b")
+				return i, []byte{'.'}, nil
+			}
+		}*/
+		if lastSentenceEnd == -1 && !enclosed && (r == '.' || r == '!') {
+			lastSentenceEnd = i
+			if firstPunct==-1 {
+				firstPunct = i
+			}
+		} else if lastSentenceEnd == -1 {
+			utf8.EncodeRune(data[i:], unicode.ToLower(r))
+			foundNonPunctuation=true
+			if unicode.IsSpace(r) {
+				//Found punctuation at end of a word, strip it
+				if firstPunct != -1 {
+					return i, data[start:firstPunct], nil
+				} else {
+					return i, data[start:i], nil
+				}
+			} else if unicode.IsPunct(r) && firstPunct == -1 {
+				//Mark first punctuation found, this is used to strip punctuation within at the end of a word
+				firstPunct = i
+			} else if firstPunct != -1 && !unicode.IsPunct(r) {
+				//Punctuation followed by non-punctuation is punctuation inside a word, we don't wish to strip that
+				firstPunct = -1
+			}
+		} else if lastSentenceEnd != -1 {
+			if unicode.IsSpace(r) {
+				if !foundNonPunctuation {
+					return i, []byte{'.'}, nil
+				}
+				end := firstPunct
+				if lastSentenceEnd < firstPunct {
+					end = lastSentenceEnd
+				}
+				return i-1, data[start:end], nil
+			} else if r != '.' && r != '!'{
+				lastSentenceEnd=-1
 			}
 		}
 	}
 	//if hit end of file this must be a sentence (user just didn't add a full stop)
 	if atEOF && len(data) > start {
-		return len(data), data[start:], nil
-	}
-	return 0, nil, nil
-}
-
-//Splitting function that separates a sentence in to a set of words. Will remove whitespace, and will also remove punctuation at
-//the end of a word (but will consider punctuation within a word as part of the word, such as 'e.g').
-func ScanWords(data []byte, atEOF bool) (advance int, token []byte, err error) {
-	if atEOF && len(data) == 0 {
-		return 0, nil, nil
-	}
-
-	//remove preceeding whitespace and punctuation
-	start := 0
-	for width := 0; start < len(data); start += width {
-		var r rune
-		r, width = utf8.DecodeRune(data[start:])
-		if !unicode.IsSpace(r) && !unicode.IsPunct(r) {
-			break
-		}
-	}
-
-	firstPunct := -1
-
-	//look for next space character
-	for width, i := 0, start; i < len(data); i += width {
-		var r rune
-		r, width = utf8.DecodeRune(data[i:])
-		if unicode.IsSpace(r) {
-			//Found punctuation at end of a word, strip it
-			if firstPunct != -1 {
-				return i, data[start:firstPunct], nil
-			} else {
-				return i, data[start:i], nil
-			}
-		} else if unicode.IsPunct(r) && firstPunct == -1 {
-			//Mark first punctuation found, this is used to strip punctuation within at the end of a word
-			firstPunct = i
-		} else if firstPunct != -1 && !unicode.IsPunct(r) {
-			//Punctuation followed by non-punctuation is punctuation inside a word, we don't wish to strip that
-			firstPunct = -1
-		}
-	}
-
-	if atEOF && len(data) > start {
-		if firstPunct != -1 {
+		if lastSentenceEnd!=-1 {
+			return len(data), data[start:lastSentenceEnd], nil
+		} else if firstPunct!=-1 {
 			return len(data), data[start:firstPunct], nil
 		} else {
-			return len(data), data[start:len(data)], nil
+			return len(data), data[start:], nil
 		}
 	}
 	return 0, nil, nil

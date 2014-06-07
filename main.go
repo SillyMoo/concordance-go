@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"flag"
-	"github.com/SillyMoo/concordance-go/tokeniser"
 	"io"
 	"os"
 )
@@ -11,18 +9,9 @@ import (
 //The main functionality for producing a concordance, pulled out in to a separate function
 //to facilitate an 'integration test'
 func produceConcordance(in io.Reader, out io.Writer, c concordanceLineOutput) {
-	var ch1 = make(chan string, 5)
 	var ch2 = make(chan wordPosition, 5)
 
-	//Split incoming text in to sentences
-	go func() {
-		tokeniser.TokenFactory(bufio.ScanLines).Compose(
-			tokeniser.TokenFactory(tokeniser.ScanSentences))(
-			in, ch1)
-		close(ch1)
-	}()
-
-	go generateWordPositions(ch1, ch2)
+	go generateWordPositions(in, ch2)
 
 	outputConcordance(out, generateConcordance(ch2), c)
 }
