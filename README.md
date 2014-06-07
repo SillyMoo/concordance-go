@@ -45,3 +45,4 @@ real    0m1.888s
 user    0m1.841s  
 sys     0m0.090s  
 
+On the branch 'faster' you can find a quick version of this program. However this does not form part of my submission, as it is really not pretty code. The assignment spoke of ensure the code is readable, and the faster branch is definitely not that. It is quick though.
