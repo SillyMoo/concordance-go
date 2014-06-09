@@ -21,3 +21,10 @@ sys     0m0.050s
 Yeah, that fast, it processes roughly 6.6mb a second, not too shabby.
 
 It has issues though, beyond just the ugliness, it currently does not handle carriage returns correctly, so it's not handling the bard quite right yet.
+
+Update 1:
+Did a slight tidyup to the way the strings are produced for the list of sentence positions, giving a slight speed boost (change was to preallocate an appropriately sized byte buffer and append the comma separated integers directly in to the byte buffer, rather than using a string join later). New stats give a small speed boost (~7.1Mb/s):
+
+real    0m0.780s  
+user    0m0.740s  
+sys     0m0.052s  
