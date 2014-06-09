@@ -45,7 +45,7 @@ func generateWordPositions(chIn chan string, chOut chan wordPosition) {
 func generateConcordance(chIn chan wordPosition) (res map[string][]position) {
 	res = make(map[string][]position)
 	for pos := range chIn {
-		res[pos.word] = append(res[pos.word], position{pos.sentenceIdx, pos.wordIdx})
+		res[pos.word] = append(res[pos.word], pos.position)
 	}
 	return
 }
@@ -76,7 +76,7 @@ func wordPositionConcordanceLineOutput(word string, positions []position, r io.W
 func outputConcordance(r io.Writer, res map[string][]position, c concordanceLineOutput) {
 	var keys = make([]string, len(res))
 	i := 0
-	for k, _ := range res {
+	for k := range res {
 		keys[i] = k
 		i++
 	}
