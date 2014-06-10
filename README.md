@@ -8,6 +8,8 @@ The design is based around tokenisers, which take a reader (incoming set of byte
 
 The use of channels is not strictly necessary, but does afford easy composition. The go routine and channel composition makes producer/consumer type abstractions very simple, and a chain of tokenisers fits this pattern perfectly.
 
+And why composable tokenisers? It is a design that would allow us to easily modify the functionality as new requirements come in. For example if we had to support pictographic languages (such as chinese) then tokenising around spaces would not neccessarily work, and different tokenisers would need to be used and could easily be switched in. The general approach also works quite well with manipulation of individual tokens as well. For example if we wished to introduce a phase which introduced character folding (such as converting the Eszett character in german to a double s).
+
 ####Performance considerations
 Channels do add a performance overhead, if performance was a primary consideration you could move to using the bufio scanner and splitfunc (as used inside the tokenisers) directly. You could also avoid using a change of tokenisers and do splitting lines and tokens in a single function (which would reduce the GC impact described below).
 
