@@ -30,7 +30,7 @@ Options:
 
 
 ###Addtional performance notes
-As a quick check to confirm that the additional concurrency would not improve performance I created a concordance from the complete works of [shakespear](http://www.gutenberg.org/ebooks/100.txt.utf-8), piping the output to /dev/null. The output from 'time' is shown below:
+As a quick check to confirm that the additional concurrency would not improve performance I created a concordance from the complete works of [shakespeare](http://www.gutenberg.org/ebooks/100.txt.utf-8), piping the output to /dev/null. The output from 'time' is shown below:
 
 real    0m1.953s  
 user    0m1.902s  
