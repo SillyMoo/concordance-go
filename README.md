@@ -11,7 +11,7 @@ The use of channels is not strictly necessary, but does afford easy composition.
 And why composable tokenisers? It is a design that would allow us to easily modify the functionality as new requirements come in. For example if we had to support pictographic languages (such as chinese) then tokenising around spaces would not neccessarily work, and different tokenisers would need to be used and could easily be switched in. The general approach also works quite well with manipulation of individual tokens as well. For example if we wished to introduce a phase which introduced character folding (such as converting the Eszett character in german to a double s).
 
 ####Performance considerations
-Channels do add a performance overhead, if performance was a primary consideration you could move to using the bufio scanner and splitfunc (as used inside the tokenisers) directly. You could also avoid using a change of tokenisers and do splitting lines and tokens in a single function (which would reduce the GC impact described below).
+Channels do add a performance overhead, if performance was a primary consideration you could move to using the bufio scanner and splitfunc (as used inside the tokenisers) directly. You could also avoid using a chain of tokenisers and do splitting lines and tokens in a single function, this would avoid making multiple passes over the same data.
 
 Note that since we are only dependent upon a single input and output resource (standard input and standard output) the design has limited concurrency (i.e thread blocking due to resource contention is not an issue). A more concurrent approach would be possible as the tokeniser is based around the channel abstraction, but the additional complexity was not justified by the current requirements.
 
@@ -47,4 +47,4 @@ real    0m1.888s
 user    0m1.841s  
 sys     0m0.090s  
 
-On the branch 'faster' you can find a quick version of this program. However this does not form part of my submission, as it is really not pretty code. The assignment spoke of ensure the code is readable, and the faster branch is definitely not that. It is quick though.
+On the branch 'faster' you can find a quicker version of this program. However this does not form part of my submission, as it is really not pretty code. The assignment spoke of ensuring the code is readable, and the faster branch is definitely not that. It is quick though.
