@@ -48,3 +48,6 @@ user    0m1.841s
 sys     0m0.090s  
 
 On the branch 'faster' you can find a quicker version of this program. However this does not form part of my submission, as it is really not pretty code. The assignment spoke of ensuring the code is readable, and the faster branch is definitely not that. It is quick though.
+
+###A little math
+The datasift website states that they currently process 4.5 terabytes of social data a day. That is 4718592MB a day, which is 54MB a second (not of all that will be processable text, some will be metadata, but lets just keep going). The shakespeare file is processed at roughly 2.81MBs. Since the algorithm is single threaded, if we had no overheads (note this is not true, the go runtime uses other threads for housekeeping tasks like GC, but it is fair 'back of the fag packet' approximation), and didn't care about redundancy, then we would need roughly 19 comparible cores (2.8GHz core i5) to process all that data.
