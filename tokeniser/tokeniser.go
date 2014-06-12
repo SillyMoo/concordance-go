@@ -35,6 +35,10 @@ func TokenFactory(sf bufio.SplitFunc) Tokeniser {
 	}
 }
 
+func isEndOfSentenceRune(r rune) bool {
+	return r=='.' || r=='?' || r=='!'
+}
+
 //Splitting function that breaks a paragraph in to a set of sentences. Will generally split on full stops or exclamation
 //marks, however it is aware of opening and closing brackets, quotes, etc.
 //If a punctuation appears inside open/closing brackets it will not be counted as a sentence break. This is not too smart though
@@ -65,7 +69,7 @@ func ScanSentences(data []byte, atEOF bool) (advance int, token []byte, err erro
 		} else if enclosed && unicode.In(r, unicode.Pe) {
 			enclosed = false
 		}
-		if !enclosed && (r == '.' || r == '!') {
+		if !enclosed && isEndOfSentenceRune(r) {
 			if i+width < len(data) {
 				r2, width2 := utf8.DecodeRune(data[i+width:])
 				if unicode.IsSpace(r2) {
